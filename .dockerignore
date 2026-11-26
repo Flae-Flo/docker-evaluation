@@ -9,3 +9,4 @@ backend
 database
 *.log
 Trivy/
+preuves/
