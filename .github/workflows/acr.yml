@@ -78,9 +78,9 @@ jobs:
     env:
       ACR_NAME: dockerevaluation
       RESOURCE_GROUP: Docker
-      FRONTEND_APP: quiz-frontend
-      BACKEND_APP: quiz-backend
-      ACA_ENV: quiz-env
+      FRONTEND_APP: quiz-frontend-standard
+      BACKEND_APP: quiz-backend-standard
+      ACA_ENV: quiz-env-standard
       PULL_IDENTITY: quiz-acr-pull
     steps:
       - name: Recuperer le script de deploiement
