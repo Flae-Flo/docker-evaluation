@@ -23,7 +23,7 @@ SELECT (SELECT COUNT(*) FROM users) AS utilisateurs,
 FROM quiz_results;
 ```
 
-Sortie retranscrite : **8 utilisateurs, 7 résultats et 120 réponses**. Six résultats existaient déjà avant le déploiement du backend précédent (26 novembre 2026 à 14:43:27 UTC). Le score **16/20** est présent en base, ce qui est cohérent avec le [quiz public capturé](../J4/2026-11-26-quiz-termine.png). Ce relevé agrégé ne corrèle pas un identifiant de tentative à la capture.
+Sortie retranscrite : **8 utilisateurs, 7 résultats et 120 réponses**. Six résultats existaient déjà avant le déploiement du backend précédent (26 novembre 2026 à 14:43:27 UTC). Le relevé contient un score de **16/20**. Le [quiz public capturé](../J4/2026-11-26-quiz-termine.png) affiche également **16/20**.
 
 Sur la même connexion, le client PostgreSQL a confirmé le chiffrement TLS et la vérification du certificat (`tls: true` et `certificat_verifie: true`).
 

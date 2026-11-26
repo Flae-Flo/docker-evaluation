@@ -20,4 +20,4 @@ az acr repository show -n dockerevaluation --image "quiz-backend:$tag" --query d
 
 GitHub Actions se connecte à Azure par OIDC et publie via `docker push` après le scan. L’identité du pipeline dispose de `AcrPush` et peut lire les propriétés du registre nécessaires à `az acr show`. Les Container Apps utilisent `quiz-acr-pull` pour télécharger les images. [Workflow de publication](../../.github/workflows/acr.yml)
 
-Le pipeline a utilisé [deploy.sh](../../scripts/deploy.sh) pour provisionner et mettre à jour les Container Apps par Azure CLI. Le mode interactif et [destroy.sh](../../scripts/destroy.sh) sont documentés dans le [README](../../README.md#déploiement-et-nettoyage-depuis-un-terminal). La sortie de création initiale du registre reste à joindre si elle est disponible.
+Le pipeline a utilisé [deploy.sh](../../scripts/deploy.sh) pour provisionner et mettre à jour les Container Apps par Azure CLI. Le mode interactif et [destroy.sh](../../scripts/destroy.sh) sont documentés dans le [README](../../README.md#déploiement-et-nettoyage-depuis-un-terminal).

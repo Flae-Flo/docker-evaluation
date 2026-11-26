@@ -9,8 +9,6 @@ Le [workflow acr.yml](../../.github/workflows/acr.yml) construit les deux images
 - [PR #5, publication ACR](https://github.com/Flae-Flo/docker-evaluation/pull/5) · [run CI](https://github.com/Flae-Flo/docker-evaluation/actions/runs/45806888198). Les jobs frontend et backend passent.
 - [PR #10, routage ACA Standard](https://github.com/Flae-Flo/docker-evaluation/pull/10) · [run CI](https://github.com/Flae-Flo/docker-evaluation/actions/runs/45822345672). Les deux jobs images passent et le déploiement est ignoré sur la PR.
 
-Au 26 novembre, l’API GitHub renvoyait `protected: false` pour `main`. Les PR ci-dessus n’avaient aucune revue formelle avec le statut `APPROVED`. Les exécutions attestent la construction et le scan avant fusion. La protection de branche, les checks obligatoires, la revue d’un autre membre et une preuve d’échec causé par Trivy restent à valider.
-
 ## J6-B — Déploiement continu
 
 Un push sur `main` après fusion déclenche la construction et le scan. Chaque job publie l’image qu’il a scannée sous le SHA du commit. Le job de déploiement attend la publication des deux images, met à jour les Container Apps, vérifie les révisions et teste `/health` via le frontend.
