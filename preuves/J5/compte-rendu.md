@@ -1,22 +1,30 @@
 # J5 — PostgreSQL cloud (Neon)
 
-Date : 26/11/2026. Projet `quiz-app`, branche `production`, base `quiz_db`, PostgreSQL 17, Frankfurt. Schéma initialisé avec `database/init.sql` (3 tables et 2 index).
+Date : 26/11/2026. Projet `quiz-app`, branche `production`, base `quiz_db`, PostgreSQL 17, Frankfurt. Le schéma a été initialisé avec [database/init.sql](../../database/init.sql), qui crée trois tables et deux index.
 
-Connexion par `DATABASE_URL`, alimentée en local par `NEON_DATABASE_URL` via le fichier de surcharge `docker-compose.neon.yml`. URL de connexion avec `sslmode=require` et `channel_binding=require`, conservée dans `.env` ignoré par Git ; aucune URL authentifiée dans `.env.example`. Pour Azure, utiliser une référence à un secret dans la Container App backend.
+En local, `docker-compose.neon.yml` transmet `NEON_DATABASE_URL` au backend sous le nom `DATABASE_URL`. L’URL de connexion avec `sslmode=require` et `channel_binding=require` est conservée dans le fichier `.env` ignoré par Git. Sur Azure, le workflow lit le secret GitHub `NEON_DATABASE_URL`. Il configure le secret ACA `database-url`, référencé par `DATABASE_URL` dans le backend. [Script de déploiement](../../scripts/deploy.sh)
 
 ```powershell
 docker compose -f docker-compose.yml -f docker-compose.neon.yml up -d
 ```
 
-```sql
-SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';
-SELECT * FROM quiz_results;
-```
+Un test local connecté à Neon a enregistré 20/20. Une [capture ultérieure](2026-11-26-deux-resultats-neon.png) montre les résultats 20/20 et 11/20 toujours présents. [Capture du schéma](2026-11-26-schema-neon.png)
 
-Test local connecté à Neon : score 20/20 enregistré. Capture ultérieure : résultats 20/20 et 11/20 toujours visibles. Le test public affiche 16/20 et la capture Neon plus récente montre quatre utilisateurs, mais ne montre pas encore le score 16/20 dans `quiz_results`. Pour corréler précisément le dernier test cloud et prouver la persistance après redéploiement, ajouter une capture de cette requête après recréation/redéploiement :
+Une requête en lecture seule, exécutée depuis la révision Azure `quiz-backend-standard--0000003` après le [redéploiement sur main](https://github.com/Flae-Flo/docker-evaluation/actions/runs/45845263076), a utilisé la connexion du backend. L’URL et les données des participants n’ont pas été affichées.
 
 ```sql
-SELECT user_id, score, total_questions, completed_at FROM quiz_results ORDER BY completed_at DESC;
+SELECT (SELECT COUNT(*) FROM users) AS utilisateurs,
+       COUNT(*) AS resultats,
+       COUNT(*) FILTER (WHERE completed_at < TIMESTAMP '2026-11-26 14:43:27')
+           AS anterieurs_au_redeploiement,
+       EXISTS (SELECT 1 FROM quiz_results WHERE score = 16 AND total_questions = 20)
+           AS score_16_sur_20,
+       (SELECT COUNT(*) FROM answers) AS reponses
+FROM quiz_results;
 ```
 
-Commit [741a291](https://github.com/Flae-Flo/docker-evaluation/commit/741a291). Fichiers : [Compose Neon](../../docker-compose.neon.yml), [exemple de variables](../../.env.example).
+Sortie retranscrite : **8 utilisateurs, 7 résultats et 120 réponses**. Six résultats existaient déjà avant le déploiement du backend précédent (26 novembre 2026 à 14:43:27 UTC). Le score **16/20** est présent en base, ce qui est cohérent avec le [quiz public capturé](../J4/2026-11-26-quiz-termine.png). Ce relevé agrégé ne corrèle pas un identifiant de tentative à la capture.
+
+Sur la même connexion, le client PostgreSQL a confirmé le chiffrement TLS et la vérification du certificat (`tls: true` et `certificat_verifie: true`).
+
+[Commit de la configuration Neon](https://github.com/Flae-Flo/docker-evaluation/commit/741a291) · [Compose Neon](../../docker-compose.neon.yml) · [Exemple de variables](../../.env.example)

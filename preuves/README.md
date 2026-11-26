@@ -6,10 +6,10 @@ Date : 26 novembre 2026. Captures et comptes rendus classés conformément aux c
 |---|---|---|
 | J1 | [Conteneurisation](J1/) | Tests et persistance ; validation confirmée par le groupe |
 | J2 | [Sécurité](J2/) | Six scans et tests ; validation à confirmer |
-| J3 | [ACR](J3/) | Dépôts visibles ; scripts et tags finaux à compléter |
-| J4 | [Container Apps](J4/) | Révisions, accès public et quiz ; HTTP /health final à joindre |
-| J5 | [Neon](J5/) | Schéma, résultats et connexion ; preuve du dernier score cloud après redéploiement à compléter |
-| J6 | [CI/CD](J6/) | Pipeline sur push réussi ; PR, approbation et liens exacts à compléter |
+| J3 | [ACR](J3/) | Registre, deux images, tag commun et digests vérifiés ; scripts Azure CLI |
+| J4 | [Container Apps](J4/) | Révisions, réseau privé et HTTP 200 via NGINX vérifiés |
+| J5 | [Neon](J5/) | Connexion TLS et résultats conservés après redéploiement vérifiés |
+| J6 | [CI/CD](J6/) | Liens des PR et exécutions CI/CD ; protection et approbation à valider |
 
 [Dépôt GitHub](https://github.com/Flae-Flo/docker-evaluation)
 

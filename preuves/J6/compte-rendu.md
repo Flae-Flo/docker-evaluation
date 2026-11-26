@@ -4,14 +4,19 @@ Date : 26/11/2026.
 
 ## J6-A — Intégration continue
 
-Le workflow fourni dans l'archive intermédiaire configure le build en matrice frontend/backend et Trivy (`severity: CRITICAL`, `exit-code: '1'`, `ignore-unfixed: false`) sur PR vers `main`. Les rapports locaux sont dans [J2](../J2/rapports/). La capture des jobs images montre leur réussite, mais ne suffit pas à identifier une PR, le contrôle requis et l'approbation. À joindre : lien exact de la PR, capture des checks requis et approbation avant fusion, lien du run CI.
+Le [workflow acr.yml](../../.github/workflows/acr.yml) construit les deux images sur les PR vers `main`. Chaque job lance Trivy sur l’image construite, avec `severity: CRITICAL`, `exit-code: '1'` et `ignore-unfixed: false`. Un scan qui échoue arrête son job. Les rapports locaux avant et après durcissement sont dans [J2](../J2/rapports/).
+
+- [PR #5, publication ACR](https://github.com/Flae-Flo/docker-evaluation/pull/5) · [run CI](https://github.com/Flae-Flo/docker-evaluation/actions/runs/45806888198). Les jobs frontend et backend passent.
+- [PR #10, routage ACA Standard](https://github.com/Flae-Flo/docker-evaluation/pull/10) · [run CI](https://github.com/Flae-Flo/docker-evaluation/actions/runs/45822345672). Les deux jobs images passent et le déploiement est ignoré sur la PR.
+
+Au 26 novembre, l’API GitHub renvoyait `protected: false` pour `main`. Les PR ci-dessus n’avaient aucune revue formelle avec le statut `APPROVED`. Les exécutions attestent la construction et le scan avant fusion. La protection de branche, les checks obligatoires, la revue d’un autre membre et une preuve d’échec causé par Trivy restent à valider.
 
 ## J6-B — Déploiement continu
 
-Le screenshot `azure.png` renommé dans ce dossier montre le workflow `acr.yml` sur push : les deux jobs images et « Déployer dans ACA » sont verts. Les dépôts ACR sont visibles dans [J3](../J3/) et les révisions dans [J4](../J4/). Le lien exact du run final, son commit et la preuve de déclenchement après fusion dans `main` restent à ajouter.
+Un push sur `main` après fusion déclenche la construction et le scan. Chaque job publie l’image qu’il a scannée sous le SHA du commit. Le job de déploiement attend la publication des deux images, met à jour les Container Apps, vérifie les révisions et teste `/health` via le frontend.
 
-- [Pull Requests du dépôt](https://github.com/Flae-Flo/docker-evaluation/pulls)
-- [GitHub Actions](https://github.com/Flae-Flo/docker-evaluation/actions)
-- [Workflow du dépôt](../../.github/workflows/acr.yml)
+- [Run réussi après la PR #10](https://github.com/Flae-Flo/docker-evaluation/actions/runs/45822525195) : premier déploiement réussi dans l’environnement Standard.
+- [Run réussi après la PR #14](https://github.com/Flae-Flo/docker-evaluation/actions/runs/45845263076) : commit de fusion `ea0b69dd7edccf677b0d0690bb429f6ca21ea62e`, deux jobs images et job ACA réussis. [Digests ACR](../J3/) · [Révisions et test HTTP](../J4/)
+- [Suppression manuelle réussie](https://github.com/Flae-Flo/docker-evaluation/actions/runs/45829395739) · [Recréation manuelle réussie](https://github.com/Flae-Flo/docker-evaluation/actions/runs/45829692358). Ces workflows ciblent les deux applications Standard et conservent le registre et Neon.
 
-Ces liens généraux ne remplacent pas les liens des PR et runs spécifiques demandés.
+Captures existantes : [jobs images](2026-11-26-jobs-images.png) et [déploiement réussi](2026-11-26-pipeline-deploiement-reussi.png).

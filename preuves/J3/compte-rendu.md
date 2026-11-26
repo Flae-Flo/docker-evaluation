@@ -1,13 +1,23 @@
 # J3 — Azure CLI et Azure Container Registry
 
-Date : 26/11/2026. Registre `dockerevaluation` : dépôts `quiz-frontend` et `quiz-backend` visibles dans la capture. Le journal de révisions dans [J4](../J4/) montre notamment l'image frontend identifiée par le SHA `c5194b019293d2ffecedefb39cfed6d1f41a51c5`.
+Le 26 novembre 2026, Azure CLI a confirmé le registre `dockerevaluation` (SKU Standard, Switzerland North) et les deux dépôts `quiz-frontend` et `quiz-backend`. La [capture des dépôts](2026-11-26-depots-acr.png) montre leur présence dans ACR.
 
-À compléter par le binôme : chemin des scripts Azure CLI effectivement utilisés, sortie non sensible de création et liste finale des tags/digests. Les captures ne suffisent pas à prouver la création par CLI.
+Les deux images portent le tag du commit `ea0b69dd7edccf677b0d0690bb429f6ca21ea62e`, issu de la [fusion de la PR #14](https://github.com/Flae-Flo/docker-evaluation/pull/14). Le [run de publication](https://github.com/Flae-Flo/docker-evaluation/actions/runs/45845263076) et les [révisions ACA](../J4/) utilisent ce même tag.
 
-Commandes de vérification proposées (à exécuter si nécessaire) :
+| Dépôt | Digest relevé dans ACR |
+|---|---|
+| `quiz-frontend` | `sha256:4c90f22732d67973092cc1bfbb2682c115680d0c2ef20faa5e81aa9738f24477` |
+| `quiz-backend` | `sha256:d5f843bf0d55e53f839da054eafda31a5efcd3303a5b06be42b6fd099227daa9` |
 
-```powershell
-az acr repository list --name dockerevaluation -o table
-az acr repository show-tags --name dockerevaluation --repository quiz-frontend -o table
-az acr repository show-tags --name dockerevaluation --repository quiz-backend -o table
+Commandes de vérification du registre et des images :
+
+```bash
+tag=ea0b69dd7edccf677b0d0690bb429f6ca21ea62e
+az acr show -n dockerevaluation -g Docker --query '{nom:name,region:location,sku:sku.name,serveur:loginServer}'
+az acr repository show -n dockerevaluation --image "quiz-frontend:$tag" --query digest -o tsv
+az acr repository show -n dockerevaluation --image "quiz-backend:$tag" --query digest -o tsv
 ```
+
+GitHub Actions se connecte à Azure par OIDC et publie via `docker push` après le scan. L’identité du pipeline dispose de `AcrPush` et peut lire les propriétés du registre nécessaires à `az acr show`. Les Container Apps utilisent `quiz-acr-pull` pour télécharger les images. [Workflow de publication](../../.github/workflows/acr.yml)
+
+Le pipeline a utilisé [deploy.sh](../../scripts/deploy.sh) pour provisionner et mettre à jour les Container Apps par Azure CLI. Le mode interactif et [destroy.sh](../../scripts/destroy.sh) sont documentés dans le [README](../../README.md#déploiement-et-nettoyage-depuis-un-terminal). La sortie de création initiale du registre reste à joindre si elle est disponible.
