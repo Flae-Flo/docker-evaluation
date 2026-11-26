@@ -1,6 +1,46 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Usage local. Sans option, GitHub Actions fournit deja la configuration.
+if [[ ${1:-} == --interactive ]]; then
+  ACR_NAME=dockerevaluation
+  RESOURCE_GROUP=Docker
+  FRONTEND_APP=quiz-frontend-standard
+  BACKEND_APP=quiz-backend-standard
+  ACA_ENV=quiz-env-standard
+  PULL_IDENTITY=quiz-acr-pull
+
+  az login --output none
+  az account show --query '{Abonnement:name, ID:id}' -o table
+
+  backend_tags=$(az acr repository show-tags -n "$ACR_NAME" --repository quiz-backend -o tsv)
+  frontend_tags=$(az acr repository show-tags -n "$ACR_NAME" --repository quiz-frontend --orderby time_desc -o tsv)
+  backend_tags=${backend_tags//$'\r'/}
+  frontend_tags=${frontend_tags//$'\r'/}
+  IMAGE_TAG=
+  while IFS= read -r tag; do
+    if [[ "$tag" =~ ^[0-9a-f]{40}$ ]] && grep -Fxq -- "$tag" <<< "$backend_tags"; then
+      IMAGE_TAG=$tag
+      break
+    fi
+  done <<< "$frontend_tags"
+  if [[ -z "$IMAGE_TAG" ]]; then
+    echo "Aucun tag de commit commun aux deux images dans ACR." >&2
+    exit 1
+  fi
+
+  echo "Images selectionnees : $IMAGE_TAG"
+  read -r -p 'Identifiant administrateur du quiz : ' ADMIN_USERNAME
+  read -r -p 'Adresse expediteur (ex. onboarding@resend.dev) : ' FROM_EMAIL
+  for secret in DATABASE_URL ADMIN_PASSWORD JWT_SECRET RESEND_API_KEY; do
+    read -r -s -p "$secret : " "$secret"
+    echo
+  done
+elif (( $# > 0 )); then
+  echo "Utilisation : bash scripts/deploy.sh --interactive" >&2
+  exit 2
+fi
+
 IMAGE_TAG=${IMAGE_TAG:-${GITHUB_SHA:-}}
 
 # Verifier la configuration avant de creer des ressources.
@@ -81,4 +121,10 @@ else
   az containerapp update -n "$FRONTEND_APP" -g "$RESOURCE_GROUP" \
     --image "$REGISTRY/quiz-frontend:$IMAGE_TAG" \
     --set-env-vars "BACKEND_URL=https://$BACKEND_HOST" --output none
+fi
+
+if [[ ${1:-} == --interactive ]]; then
+  FRONTEND_HOST=$(az containerapp show -n "$FRONTEND_APP" -g "$RESOURCE_GROUP" \
+    --query properties.configuration.ingress.fqdn -o tsv)
+  echo "URL du quiz : https://$FRONTEND_HOST"
 fi

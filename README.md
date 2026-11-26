@@ -43,6 +43,17 @@ Lisez les documents dans cet ordre :
 
 **Important :** les comptes Azure for Students peuvent être limités par les crédits, quotas, régions et autorisations. Vérifiez les possibilités de votre abonnement avant de créer des ressources payantes. Supprimez les ressources inutilisées après sauvegarde des preuves et accord du formateur.
 
+## Déploiement et nettoyage depuis un terminal
+
+Utilisez Bash et Azure CLI avec un compte autorisé sur le groupe `Docker`. Le registre `dockerevaluation` doit contenir les deux images du quiz avec un tag de commit commun, et l’identité `quiz-acr-pull` doit pouvoir les télécharger.
+
+```bash
+bash scripts/deploy.sh --interactive
+bash scripts/destroy.sh
+```
+
+Les deux scripts ouvrent la connexion Microsoft avec `az login`. Sélectionnez l’abonnement qui contient le groupe `Docker`. Le déploiement choisit la dernière paire d’images et demande les valeurs applicatives (dont l’URL Neon et la clé Resend). Les valeurs sensibles sont saisies sans être affichées. La suppression demande de saisir `SUPPRIMER` et retire les deux Container Apps Standard. L’environnement `quiz-env-standard`, le registre ACR et la base Neon restent disponibles pour le prochain déploiement.
+
 ## Règles générales
 
 - Travail en groupe ; déposez le lien de votre dépôt et les preuves demandées au formateur.
