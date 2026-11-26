@@ -22,8 +22,7 @@ COPY nginx/nginx.conf /etc/nginx/templates/default.conf.template
 
 # Adresse locale par defaut ; le workflow fournit l'adresse ACA en production.
 ENV BACKEND_URL=http://backend:3007
-ENV BACKEND_DAPR_APP_ID=""
-ENV NGINX_ENVSUBST_FILTER=^BACKEND_(URL|DAPR_APP_ID)$
+ENV NGINX_ENVSUBST_FILTER=^BACKEND_URL$
 
 USER 101
 
