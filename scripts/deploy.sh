@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+IMAGE_TAG=${IMAGE_TAG:-${GITHUB_SHA:-}}
+
 # Verifier la configuration avant de creer des ressources.
-for variable in ACR_NAME RESOURCE_GROUP FRONTEND_APP BACKEND_APP ACA_ENV PULL_IDENTITY GITHUB_SHA DATABASE_URL ADMIN_USERNAME ADMIN_PASSWORD JWT_SECRET RESEND_API_KEY FROM_EMAIL; do
+for variable in ACR_NAME RESOURCE_GROUP FRONTEND_APP BACKEND_APP ACA_ENV PULL_IDENTITY IMAGE_TAG DATABASE_URL ADMIN_USERNAME ADMIN_PASSWORD JWT_SECRET RESEND_API_KEY FROM_EMAIL; do
   if [[ -z "${!variable:-}" ]]; then
     echo "Configuration manquante : $variable (voir les secrets GitHub pour les identifiants applicatifs)."
     exit 1
@@ -39,7 +41,7 @@ backend_env=("PORT=3007" "DATABASE_URL=secretref:database-url"
 BACKEND_EXISTS=$(az containerapp list -g "$RESOURCE_GROUP" --query "[?name=='$BACKEND_APP'].name" -o tsv)
 if [[ -z "$BACKEND_EXISTS" ]]; then
   az containerapp create -n "$BACKEND_APP" -g "$RESOURCE_GROUP" \
-    --environment "$ACA_ENV" --image "$REGISTRY/quiz-backend:$GITHUB_SHA" \
+    --environment "$ACA_ENV" --image "$REGISTRY/quiz-backend:$IMAGE_TAG" \
     --user-assigned "$IDENTITY_ID" --registry-identity "$IDENTITY_ID" --registry-server "$REGISTRY" \
     --ingress internal --target-port 3007 --revisions-mode single \
     --cpu 0.25 --memory 0.5Gi --min-replicas 0 --max-replicas 1 \
@@ -47,7 +49,7 @@ if [[ -z "$BACKEND_EXISTS" ]]; then
 else
   az containerapp secret set -n "$BACKEND_APP" -g "$RESOURCE_GROUP" --secrets "${secrets[@]}" --output none
   az containerapp update -n "$BACKEND_APP" -g "$RESOURCE_GROUP" \
-    --image "$REGISTRY/quiz-backend:$GITHUB_SHA" --set-env-vars "${backend_env[@]}" --output none
+    --image "$REGISTRY/quiz-backend:$IMAGE_TAG" --set-env-vars "${backend_env[@]}" --output none
 fi
 
 # 3. Utiliser l'adresse publiee par l'ingress interne d'Azure.
@@ -60,13 +62,13 @@ fi
 FRONTEND_EXISTS=$(az containerapp list -g "$RESOURCE_GROUP" --query "[?name=='$FRONTEND_APP'].name" -o tsv)
 if [[ -z "$FRONTEND_EXISTS" ]]; then
   az containerapp create -n "$FRONTEND_APP" -g "$RESOURCE_GROUP" \
-    --environment "$ACA_ENV" --image "$REGISTRY/quiz-frontend:$GITHUB_SHA" \
+    --environment "$ACA_ENV" --image "$REGISTRY/quiz-frontend:$IMAGE_TAG" \
     --user-assigned "$IDENTITY_ID" --registry-identity "$IDENTITY_ID" --registry-server "$REGISTRY" \
     --ingress external --target-port 8080 --revisions-mode single \
     --cpu 0.25 --memory 0.5Gi --min-replicas 0 --max-replicas 1 \
     --env-vars "BACKEND_URL=https://$BACKEND_HOST" --output none
 else
   az containerapp update -n "$FRONTEND_APP" -g "$RESOURCE_GROUP" \
-    --image "$REGISTRY/quiz-frontend:$GITHUB_SHA" \
+    --image "$REGISTRY/quiz-frontend:$IMAGE_TAG" \
     --set-env-vars "BACKEND_URL=https://$BACKEND_HOST" --output none
 fi

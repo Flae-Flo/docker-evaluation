@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+image_tag=${IMAGE_TAG:-${GITHUB_SHA:?Un tag image est requis}}
 registry=$(az acr show -n "$ACR_NAME" -g "$RESOURCE_GROUP" --query loginServer -o tsv)
 
 check_revision() {
@@ -24,5 +25,5 @@ check_revision() {
   return 1
 }
 
-check_revision "$BACKEND_APP" "$registry/quiz-backend:$GITHUB_SHA"
-check_revision "$FRONTEND_APP" "$registry/quiz-frontend:$GITHUB_SHA"
+check_revision "$BACKEND_APP" "$registry/quiz-backend:$image_tag"
+check_revision "$FRONTEND_APP" "$registry/quiz-frontend:$image_tag"
