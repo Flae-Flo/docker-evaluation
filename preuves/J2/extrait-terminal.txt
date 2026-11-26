@@ -1,0 +1,5 @@
+Extrait des sorties communiquées le 26/11/2026, retranscrit :
+frontend: uid=101(nginx) gid=101(nginx) groups=101(nginx)
+backend: uid=1000(node) gid=1000(node) groups=1000(node)
+GET /health : status ok
+Images initiales et secure conservées. Quiz complet réussi après durcissement (deux tentatives visibles, meilleur score 20/20).
