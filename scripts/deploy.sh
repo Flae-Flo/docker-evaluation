@@ -47,9 +47,19 @@ if [[ -z "$BACKEND_EXISTS" ]]; then
     --cpu 0.25 --memory 0.5Gi --min-replicas 0 --max-replicas 1 \
     --secrets "${secrets[@]}" --env-vars "${backend_env[@]}" --output none
 else
+  BACKEND_REVISION=$(az containerapp show -n "$BACKEND_APP" -g "$RESOURCE_GROUP" \
+    --query properties.latestRevisionName -o tsv)
   az containerapp secret set -n "$BACKEND_APP" -g "$RESOURCE_GROUP" --secrets "${secrets[@]}" --output none
-  az containerapp update -n "$BACKEND_APP" -g "$RESOURCE_GROUP" \
-    --image "$REGISTRY/quiz-backend:$IMAGE_TAG" --set-env-vars "${backend_env[@]}" --output none
+  UPDATED_REVISION=$(az containerapp update -n "$BACKEND_APP" -g "$RESOURCE_GROUP" \
+    --image "$REGISTRY/quiz-backend:$IMAGE_TAG" --set-env-vars "${backend_env[@]}" \
+    --query properties.latestRevisionName -o tsv)
+
+  # Une nouvelle revision charge les secrets. Si l'image reste la meme, relancer l'ancienne.
+  if [[ -n "$BACKEND_REVISION" && "$UPDATED_REVISION" == "$BACKEND_REVISION" ]]; then
+    echo "Redemarrage du backend pour recharger les secrets."
+    az containerapp revision restart -n "$BACKEND_APP" -g "$RESOURCE_GROUP" \
+      --revision "$BACKEND_REVISION" --output none
+  fi
 fi
 
 # 3. Utiliser l'adresse publiee par l'ingress interne d'Azure.
