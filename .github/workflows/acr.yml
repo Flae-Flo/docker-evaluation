@@ -24,6 +24,7 @@ jobs:
             context: ./backend
     env:
       ACR_NAME: dockerevaluation
+      RESOURCE_GROUP: Docker
       IMAGE: quiz-${{ matrix.service }}:${{ github.sha }}
 
     steps:
@@ -60,7 +61,7 @@ jobs:
       - name: 4 - Publier dans ACR
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          az acr login --name "$ACR_NAME"
-          REGISTRY=$(az acr show --name "$ACR_NAME" --query loginServer -o tsv)
+          az acr login --name "$ACR_NAME" --resource-group "$RESOURCE_GROUP"
+          REGISTRY=$(az acr show --name "$ACR_NAME" --resource-group "$RESOURCE_GROUP" --query loginServer -o tsv)
           docker tag "$IMAGE" "$REGISTRY/$IMAGE"
           docker push "$REGISTRY/$IMAGE"
