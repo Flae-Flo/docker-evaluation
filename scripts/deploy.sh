@@ -45,9 +45,17 @@ else
     --image "$REGISTRY/quiz-backend:$GITHUB_SHA" --set-env-vars "${backend_env[@]}" --output none
 fi
 
-# 3. Deployer le frontend public et lui donner l'adresse HTTPS du backend.
-BACKEND_HOST=$(az containerapp show -n "$BACKEND_APP" -g "$RESOURCE_GROUP" --query properties.configuration.ingress.fqdn -o tsv)
-test -n "$BACKEND_HOST" || { echo "Adresse backend manquante"; exit 1; }
+# 3. Utiliser l'adresse HTTPS interne du backend dans le meme environnement ACA.
+BACKEND_INGRESS_OK=$(az containerapp show -n "$BACKEND_APP" -g "$RESOURCE_GROUP" \
+  --query 'properties.configuration.ingress.external == `false` && properties.configuration.ingress.targetPort == `3007`' -o tsv)
+if [[ "${BACKEND_INGRESS_OK,,}" != true ]]; then
+  echo "Le backend doit avoir un ingress interne sur le port 3007."
+  exit 1
+fi
+ENV_DOMAIN=$(az containerapp env show -n "$ACA_ENV" -g "$RESOURCE_GROUP" \
+  --query properties.defaultDomain -o tsv)
+test -n "$ENV_DOMAIN" || { echo "Domaine de l'environnement ACA introuvable"; exit 1; }
+BACKEND_HOST="$BACKEND_APP.internal.$ENV_DOMAIN"
 FRONTEND_EXISTS=$(az containerapp list -g "$RESOURCE_GROUP" --query "[?name=='$FRONTEND_APP'].name" -o tsv)
 if [[ -z "$FRONTEND_EXISTS" ]]; then
   az containerapp create -n "$FRONTEND_APP" -g "$RESOURCE_GROUP" \
