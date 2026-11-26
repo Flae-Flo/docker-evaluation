@@ -1,0 +1,10 @@
+Extraits des sorties communiquées le 26/11/2026 (retranscrits, sans secrets).
+[+] Building 15.5s (26/26) FINISHED
+Image quiz-frontend:initial Built
+Image quiz-backend:initial Built
+Volume eval-quiz-app_postgres-data Created
+Container eval-quiz-app-db-1 Healthy
+Container eval-quiz-app-backend-1 Started
+Container eval-quiz-app-frontend-1 Started
+GET /health : status ok
+Backend : Server running on port 3007
