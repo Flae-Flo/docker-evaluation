@@ -1,4 +1,4 @@
-name: Construire, analyser et publier dans ACR
+name: Construire, analyser, publier et deployer
 
 on:
   pull_request:
@@ -65,3 +65,50 @@ jobs:
           REGISTRY=$(az acr show --name "$ACR_NAME" --resource-group "$RESOURCE_GROUP" --query loginServer -o tsv)
           docker tag "$IMAGE" "$REGISTRY/$IMAGE"
           docker push "$REGISTRY/$IMAGE"
+
+  # Mission 5 : deployer seulement quand les DEUX images sont publiees.
+  deploy:
+    name: Deployer dans ACA
+    needs: images
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deployment-aca-main
+      cancel-in-progress: false
+    env:
+      ACR_NAME: dockerevaluation
+      RESOURCE_GROUP: Docker
+      FRONTEND_APP: quiz-frontend
+      BACKEND_APP: quiz-backend
+      ACA_ENV: quiz-env
+      PULL_IDENTITY: quiz-acr-pull
+    steps:
+      - name: Recuperer le script de deploiement
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Se connecter a Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: 5 - Creer ou mettre a jour les Container Apps
+        env:
+          DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+          ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
+        run: bash scripts/deploy.sh
+
+      - name: 6 - Verifier le frontend et le backend
+        run: |
+          FRONTEND_HOST=$(az containerapp show -n "$FRONTEND_APP" -g "$RESOURCE_GROUP" --query properties.configuration.ingress.fqdn -o tsv)
+          test -n "$FRONTEND_HOST" || { echo "Activer l'ingress du frontend"; exit 1; }
+          curl --fail --silent --show-error --retry 12 --retry-all-errors --retry-delay 5 --max-time 15 "https://$FRONTEND_HOST/" --output /dev/null
+          curl --fail --silent --show-error --retry 12 --retry-all-errors --retry-delay 5 --max-time 15 "https://$FRONTEND_HOST/health" | grep -q '"status":"ok"'
+          echo "Application accessible : https://$FRONTEND_HOST"

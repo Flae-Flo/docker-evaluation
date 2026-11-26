@@ -17,7 +17,12 @@ USER root
 RUN apk upgrade --no-cache
 
 COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --chown=101:101 nginx/nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx/nginx.conf /etc/nginx/templates/default.conf.template
+
+# Adresse locale par defaut ; le workflow fournit l'adresse ACA en production.
+ENV BACKEND_URL=http://backend:3007
+ENV NGINX_ENVSUBST_FILTER=^BACKEND_URL$
 
 USER 101
 
