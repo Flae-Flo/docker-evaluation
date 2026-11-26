@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: quiz-frontend:secure
+    image: quiz-frontend:secure-v2
     ports:
       - "8087:8080"
     depends_on:
@@ -21,7 +21,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    image: quiz-backend:secure
+    image: quiz-backend:secure-v2
     environment:
       PORT: 3007
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
