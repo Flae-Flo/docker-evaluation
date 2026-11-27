@@ -72,6 +72,11 @@ body {
   background: #e5f2fcff;
 }
 
+body:has(#registration-form) {
+  background: #42198a url("/fond-connexion.jpg") center / cover no-repeat;
+  padding: 16px;
+}
+
 #app {
   background: #ffffff;
   border-radius: 8px;
